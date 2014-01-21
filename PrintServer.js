@@ -16,7 +16,7 @@ var https = require('https'),
 	live = false;
 
 // PRINT LABELS
-function print(printer, kids) {
+function print(printerName, kids) {
 	// Labels are generated using PDFkit.
 	// Find more options and formatting help at http://pdfkit.org
 	var doc = new PDFDocument({
@@ -76,10 +76,11 @@ function print(printer, kids) {
 			doc.fontSize(40).font('Helvetica-Bold').fillColor('white').text(p.code, 182, -52, {width:100,align:'center'});
 		}
 	}
+	console.log('Printing to '+printerName);
 	
 	// GENERATE PDF & SEND TO PRINTER
 	doc.output(function(pdf){
-		var printer = ipp.Printer('http://127.0.0.1:631/printers/'+printer);
+		var printer = ipp.Printer('http://127.0.0.1:631/printers/'+printerName);
 		var file = {
 			'operation-attributes-tag':{
 				'requesting-user-name': 'Josiah',
@@ -90,19 +91,27 @@ function print(printer, kids) {
 		};
 		printer.execute('Print-Job', file, function (err, res) {
 			console.log('Printed: '+res.statusCode);
-			console.log(res)
+			console.log(res);
+			// Callback
+			var x = {
+				'type': 'printback',
+				'session': fromSession,
+				'data': res
+			};
+			client.send('kidddox'+db.settings.id, JSON.stringify(x))
 		})
 	})
 }
-function testPrint() {
+function testPrint(printerName, fromSession) {
 	var doc = new PDFDocument({
 		size: [165,288],// 30256 DYMO Large Shipping Labels
 		margins: 1
 	});
 	doc.rotate(90);
 	doc.fontSize(36).font('Helvetica-Bold').text('Test', 14, -150);
+	console.log('Printing to '+printerName);
 	doc.output(function(pdf){
-		var printer = ipp.Printer('http://127.0.0.1:631/printers/'+printer);
+		var printer = ipp.Printer('http://127.0.0.1:631/printers/'+printerName);
 		var file = {
 			'operation-attributes-tag':{
 				'requesting-user-name': db.settings.name,
@@ -113,7 +122,14 @@ function testPrint() {
 		};
 		printer.execute('Print-Job', file, function (err, res) {
 			console.log('Printed: '+res.statusCode);
-			console.log(res)
+			console.log(res);
+			// Callback
+			var x = {
+				'type': 'printback',
+				'session': fromSession,
+				'data': res
+			};
+			client.send('kidddox'+db.settings.id, JSON.stringify(x))
 		})
 	})
 }
@@ -123,8 +139,8 @@ function realtime() {
 	var connectionUrl = 'https://ortc-developers.realtime.co/server/ssl/2.1/',
 		appKey = 'GAgawx',
 		authToken = session,
-		channel = 'kidddox'+db.settings.id,
-		client = new OrtcNodeclient();
+		channel = 'kidddox'+db.settings.id;
+	client = new OrtcNodeclient();
 	client.setClusterUrl(connectionUrl);
 	client.setConnectionMetadata('UserConnectionMetadata');
 	client.onConnected = function (ortc){
@@ -144,9 +160,9 @@ function msg(m) {
 	m = JSON.parse(m);
 	if (m.type=='print'){
 		if (m.children==0){
-			testPrint()
+			testPrint(m.printer, m.session)
 		} else {
-			print(m.printer, m.children)
+			print(m.printer, m.children, m.session)
 		}
 	}
 	if (m.type=='save'){
