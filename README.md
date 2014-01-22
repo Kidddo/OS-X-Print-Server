@@ -54,12 +54,11 @@ A Node.js module manager called NPM will be installed automatically and this is 
 
 Open Terminal back up and type or paste the following command and hit return:
 
-    npm install ipp time pdfkit ibtrealtimesjnode
+    npm install ipp pdfkit ibtrealtimesjnode
 
 This will install the following modules:
 
 * [ipp](https://npmjs.org/package/ipp) (for printing to our CUPS server)
-* [time](https://npmjs.org/package/time) (for setting the right timezone)
 * [pdfkit](https://npmjs.org/package/pdfkit) (for generating labels)
 * [ibtrealtimesjnode](https://npmjs.org/package/ibtrealtimesjnode) (for our realtime communication)
 

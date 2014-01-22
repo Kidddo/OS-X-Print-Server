@@ -8,7 +8,6 @@ var token = 'abc';
 // VARIABLES
 var https = require('https'),
 	ipp = require('ipp'),
-	time = require('time'),
 	PDFDocument = require('pdfkit'),
 	OrtcNodeclient = require('ibtrealtimesjnode').IbtRealTimeSJNode,
 	session = Math.floor(Math.random()*90000)+10000,
@@ -16,7 +15,7 @@ var https = require('https'),
 	live = false;
 
 // PRINT LABELS
-function print(printerName, kids) {
+function print(printerName, kids, fromSession) {
 	// Labels are generated using PDFkit.
 	// Find more options and formatting help at http://pdfkit.org
 	var doc = new PDFDocument({
@@ -29,14 +28,17 @@ function print(printerName, kids) {
 	var firsttag = true;
 	// LOOP THROUGH EACH CHILD & ADD LABELS
 	for (var i = 0; i < kids.length; i++) {
-		var p = db.person[kids[i]];
+		var id = kids[i].id;
+		var code = kids[i].code;
+		var p = db.person[id];
 		// GET QUANTITY OF LABELS TO PRINT
 		var qty = 0, s = db.settings;
 		if (s.useRooms==1){
-			qty = db.room[p.roomID].tags
+			qty = db.room[p.roomid].tags
 		} else if (s.useGrades==1) {
 			qty = db.grade[p.grade].tags
 		}
+		if (s.useRooms==0 && s.useGrades==0){ return }
 		
 		// FORMAT LABEL
 		for (var q = 0; q < qty; q++) {
@@ -46,14 +48,14 @@ function print(printerName, kids) {
 				doc.addPage().rotate(90)
 			}
 			// FIRST NAME
-			doc.fontSize(36).font('Helvetica-Bold').text(p.first, 14, -150);
+			doc.fontSize(36).font('Helvetica-Bold').text(p.first, 15, -150);
 			// LAST NAME
-			doc.fontSize(16).font('Helvetica').text(p.last, 15, -117);
+			doc.fontSize(16).font('Helvetica').text(p.last, 16, -117);
 			// DIVIDING LINE
 			doc.lineWidth(4).lineCap('butt').moveTo(16,-100).lineTo(273,-100).stroke();
 			// GENDER
 			var gender = (p.gender==1)?'Male':'Female';
-			doc.fontSize(20).font('Helvetica-Bold').text(gender, 15, -94);
+			doc.fontSize(20).font('Helvetica-Bold').text(gender, 16, -94);
 			// AGE
 			doc.text(getAge(p.birthdate), 70, -94, {width:200, align:'right'});
 			// ROOM
@@ -64,7 +66,7 @@ function print(printerName, kids) {
 			doc.text(grade, 71, -77, {width:200, align:'right'});
 			// NOTES
 			var notes = (p.notes&&p.notes!=='')?'Allergies/Notes:':'';
-			doc.fontSize(10).font('Helvetica').text(notes, 16, -62);
+			doc.fontSize(10).font('Helvetica').text(notes, 17, -62);
 			// NOTES DESCRIPTION
 			var noteson = (p.notes&&p.notes!=='')?p.notes:'';
 			doc.fontSize(9).text(noteson, 17, -50, {width:170});
@@ -73,7 +75,7 @@ function print(printerName, kids) {
 			// GRAY BOX BEHIND CODE
 			doc.lineWidth(44).strokeColor('gray').lineCap('butt').moveTo(190,-36).lineTo(273,-36).stroke();
 			// SECURITY CODE
-			doc.fontSize(40).font('Helvetica-Bold').fillColor('white').text(p.code, 182, -52, {width:100,align:'center'});
+			doc.fontSize(40).font('Helvetica-Bold').fillColor('white').text(code, 182, -52, {width:100,align:'center'});
 		}
 	}
 	console.log('Printing to '+printerName);
@@ -180,6 +182,7 @@ function getAge(dt,format) {
     var y = Math.floor(d/365);
     var c = (format)?'year-old':'years';
     var age = y;
+    if (!age){return 'Age Unknown'}
     if (m<24){age=m;c=(format)?'month-old':'months'}
     if (w<24){age=w;c=(format)?'week-old':'weeks'}
     if (d<24){age=d;c=(format)?'day-old':'days'}
@@ -196,10 +199,6 @@ function timestamp() {
 		pm = (h>11)?'pm':'am';
 	return n[d.getDay()]+', '+m[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()+' @ '+hours+':'+min+pm
 }
-function timezone() {
-	var now = new time.Date();
-	now.setTimezone(db.settings.timezone);
-}
 
 // LOAD DATA
 function load() {
@@ -208,13 +207,14 @@ function load() {
 	  res.on('data', function(d) {
 	    console.log('Loaded');
 	    d = JSON.parse(d);
+	    console.log(d);
 	    if (d.status=='y') {
 	    	  db = d;
+	    	  console.log('DB Updated');
 	    	  // INITIALIZE REALTIME
 	    	  if (!live){
 	    	  	live = true;
 	    	  	realtime();
-	    	  	timezone();
 	    	  }
 	    } else {
 	    	console.log(d.status)
