@@ -16,6 +16,7 @@ var https = require('https'),
 
 // PRINT LABELS
 function print(printerName, kids, fromSession) {
+	var totalLabels = 0;
 	// Labels are generated using PDFkit.
 	// Find more options and formatting help at http://pdfkit.org
 	var doc = new PDFDocument({
@@ -39,9 +40,11 @@ function print(printerName, kids, fromSession) {
 			qty = db.grade[p.grade].tags
 		}
 		if (s.useRooms==0 && s.useGrades==0){ return }
+		console.log(qty+' tags will print for '+p.first);
 		
 		// FORMAT LABEL
 		for (var q = 0; q < qty; q++) {
+			totalLabels++;
 			if (firsttag){
 				firsttag = false
 			} else {
@@ -59,7 +62,7 @@ function print(printerName, kids, fromSession) {
 			// AGE
 			doc.text(getAge(p.birthdate), 70, -94, {width:200, align:'right'});
 			// ROOM
-			var room = (p.roomId&&p.roomId!=='')?'Room: '+db.room[p.roomId].name:'';
+			var room = (p.roomid&&p.roomid!=='')?'Room: '+db.room[p.roomid].name:'';
 			doc.fontSize(14).text(room, 16, -77);
 			// GRADE
 			var grade = (p.grade&&p.grade!=='')?'Grade: '+db.grade[p.grade].name:'';
@@ -81,28 +84,37 @@ function print(printerName, kids, fromSession) {
 	console.log('Printing to '+printerName);
 	
 	// GENERATE PDF & SEND TO PRINTER
-	doc.output(function(pdf){
-		var printer = ipp.Printer('http://127.0.0.1:631/printers/'+printerName);
-		var file = {
-			'operation-attributes-tag':{
-				'requesting-user-name': 'Josiah',
-				'job-name': 'Print Job',
-				'document-format': 'application/pdf'
-			},
-			data: new Buffer(pdf, 'binary')
-		};
-		printer.execute('Print-Job', file, function (err, res) {
-			console.log('Printed: '+res.statusCode);
-			console.log(res);
-			// Callback
-			var x = {
-				'type': 'printback',
-				'session': fromSession,
-				'data': res
+	if (totalLabels > 0){
+		doc.output(function(pdf){
+			var printer = ipp.Printer('http://127.0.0.1:631/printers/'+printerName);
+			var file = {
+				'operation-attributes-tag':{
+					'requesting-user-name': 'Josiah',
+					'job-name': 'Print Job',
+					'document-format': 'application/pdf'
+				},
+				data: new Buffer(pdf, 'binary')
 			};
-			client.send('kidddox'+db.settings.id, JSON.stringify(x))
+			printer.execute('Print-Job', file, function (err, res) {
+				console.log('Printed: '+res.statusCode);
+				console.log(res);
+				// Callback
+				var x = {
+					'type': 'printback',
+					'session': fromSession,
+					'data': res
+				};
+				client.send('kidddox'+db.settings.id, JSON.stringify(x))
+			})
 		})
-	})
+	} else {
+		var x = {
+			'type': 'printback',
+			'session': fromSession,
+			'data': 'No labels assigned for this person'
+		};
+		client.send('kidddox'+db.settings.id, JSON.stringify(x))
+	}
 }
 function testPrint(printerName, fromSession) {
 	var doc = new PDFDocument({
@@ -155,7 +167,7 @@ function realtime() {
 		console.log('Subscribed');
 	};
 	// CONNECT
-	console.log('Connecting to ' + connectionUrl);
+	console.log('Connecting to Realtime');
 	client.connect(appKey, authToken);
 }
 function msg(m) {
@@ -207,10 +219,9 @@ function load() {
 	  res.on('data', function(d) {
 	    console.log('Loaded');
 	    d = JSON.parse(d);
-	    console.log(d);
 	    if (d.status=='y') {
 	    	  db = d;
-	    	  console.log('DB Updated');
+	    	  console.log('Data Updated');
 	    	  // INITIALIZE REALTIME
 	    	  if (!live){
 	    	  	live = true;
