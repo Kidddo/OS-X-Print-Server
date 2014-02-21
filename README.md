@@ -73,7 +73,7 @@ We're going to focus on 1 line near the top of the script:
 
     var token = 'abc';
 
-Replace `abc` with your organization's API token. Your token can be found in [Kidddo's Admin](https://kidddo.org/admin#settings) page under "Settings".
+Replace `abc` with your organization's API token. Your token can be found in your Kidddo [Admin](https://kidddo.org/admin#settings) page under "Settings>Set Printer>Server".
 
 ===
 ###Run PrintServer.js
