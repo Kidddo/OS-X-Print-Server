@@ -1,5 +1,5 @@
 ##Kidddo Print Server OS X
-This guide will help you set up a [Kidddo](http://kidddo.org) Print Server on OS X. Here's our checklist of what we will accomplish:
+This guide will help you set up a [Kidddo](http://kidddo.com) Print Server on OS X. Here's our checklist of what we will accomplish:
 
 * Install Printer Drivers
 * Turn on the Mac's web interface for its CUPS server
@@ -73,7 +73,7 @@ We're going to focus on 1 line near the top of the script:
 
     var token = 'abc';
 
-Replace `abc` with your organization's API token. Your token can be found in your Kidddo [Admin](https://kidddo.org/admin#settings) page under "Settings>Set Printer>Server".
+Replace `abc` with your organization's API token. Your token can be found in your Kidddo [Admin](https://kidddo.com/admin#settings) page under "Settings>Set Printer>Server".
 
 ===
 ###Run PrintServer.js
