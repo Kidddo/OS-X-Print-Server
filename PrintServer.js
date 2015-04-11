@@ -91,10 +91,10 @@ function print(printerName, kids, fromSession) {
 			// AGE
 			doc.text(getAge(p.birthdate), 70, -94, {width:200, align:'right'});
 			// ROOM
-			var room = (p.roomid&&p.roomid!=='')?'Room: '+db.room[p.roomid].name:'';
+			var room = (p.roomid&&p.roomid!==''&&db.room[p.roomid])?'Room: '+db.room[p.roomid].name:'';
 			doc.fontSize(14).text(room, 16, -77);
 			// GRADE
-			var grade = (p.grade&&p.grade!=='')?'Grade: '+db.grade[p.grade].name:'';
+			var grade = (p.grade&&p.grade!==''&&db.grade[p.grade])?'Grade: '+db.grade[p.grade].name:'';
 			doc.text(grade, 71, -77, {width:200, align:'right'});
 			// NOTES
 			var notes = (p.notes&&p.notes!=='')?'Allergies/Notes:':'';
