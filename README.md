@@ -1,3 +1,5 @@
+#Deprecated
+
 ##Kidddo Print Server OS X
 This guide will help you set up a [Kidddo](http://kidddo.com) Print Server on OS X. Here's our checklist of what we will accomplish:
 
